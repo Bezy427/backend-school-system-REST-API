@@ -281,7 +281,7 @@ This logic is implemented in the TeacherService and DepartmentService.
 
 ### Clone Repository
 ```bash
-git clone https://github.com/<your-username>/school-system.git
+git clone https://github.com/Bezy427/school-system-REST-API.git
 cd school-system
 
 
