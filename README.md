@@ -1,6 +1,6 @@
 # 🏫 School Management System
 
-![Java](https://img.shields.io/badge/Java-24-blue.svg)
+![Java](https://img.shields.io/badge/Java-17-blue.svg)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen.svg)
 ![MySQL](https://img.shields.io/badge/Database-MySQL-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
