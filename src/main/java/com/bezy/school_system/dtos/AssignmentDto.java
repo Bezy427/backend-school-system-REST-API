@@ -13,45 +13,6 @@ public class AssignmentDto {
     private Teacher teacher;
     private Subject subject;
 
-    public AssignmentDto(Long id,
-                         LocalDateTime dueDate,
-                         Teacher teacher,
-                         Subject subject) {
-        this.id = id;
-        this.dueDate = dueDate;
-        this.teacher = teacher;
-        this.subject = subject;
-    }
 
-    public Long getId() {
-        return id;
-    }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public LocalDateTime getDueDate() {
-        return dueDate;
-    }
-
-    public void setDueDate(LocalDateTime dueDate) {
-        this.dueDate = dueDate;
-    }
-
-    public Teacher getTeacher() {
-        return teacher;
-    }
-
-    public void setTeacher(Teacher teacher) {
-        this.teacher = teacher;
-    }
-
-    public Subject getSubject() {
-        return subject;
-    }
-
-    public void setSubject(Subject subject) {
-        this.subject = subject;
-    }
 }

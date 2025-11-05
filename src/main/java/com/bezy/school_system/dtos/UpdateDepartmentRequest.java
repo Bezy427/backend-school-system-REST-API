@@ -3,18 +3,20 @@ package com.bezy.school_system.dtos;
 import com.bezy.school_system.entities.Teacher;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class UpdateDepartmentRequest {
     private String name;
     private String members;
-    private Teacher teacher;
+    private List<Teacher> teachers;
 
     public UpdateDepartmentRequest(String name,
                                    String members,
-                                   Teacher teacher) {
+                                   List<Teacher> teachers) {
         this.name = name;
         this.members = members;
-        this.teacher = teacher;
+        this.teachers = teachers;
     }
 
     public String getName() {
@@ -33,11 +35,11 @@ public class UpdateDepartmentRequest {
         this.members = members;
     }
 
-    public Teacher getTeacher() {
-        return teacher;
+    public List<Teacher> getTeachers() {
+        return teachers;
     }
 
-    public void setTeacher(Teacher teacher) {
-        this.teacher = teacher;
+    public void setTeacher(List<Teacher> teachers) {
+        this.teachers = teachers;
     }
 }

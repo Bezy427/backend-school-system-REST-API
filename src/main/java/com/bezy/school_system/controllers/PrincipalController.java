@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/principal")
 public class PrincipalController {
     private final PrincipalRepository principalRepository;
     private final PrincipalMapper principalMapper;

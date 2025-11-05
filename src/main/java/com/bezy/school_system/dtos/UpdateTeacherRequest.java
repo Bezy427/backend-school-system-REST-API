@@ -1,8 +1,10 @@
 package com.bezy.school_system.dtos;
 
+import com.bezy.school_system.entities.Department;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class UpdateTeacherRequest {
@@ -14,10 +16,10 @@ public class UpdateTeacherRequest {
     private String confirmPassword;
     private String phoneNumber;
     private String address;
-    private String department;
     private String qualification;
     private String subject;
     private LocalDate hireDate;
+    private Department department;
 
     public UpdateTeacherRequest(String username,
                                 String firstName,
@@ -27,10 +29,10 @@ public class UpdateTeacherRequest {
                                 String confirmPassword,
                                 String phoneNumber,
                                 String address,
-                                String department,
                                 String qualification,
                                 String subject,
-                                LocalDate hireDate) {
+                                LocalDate hireDate,
+                                Department department) {
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -109,11 +111,11 @@ public class UpdateTeacherRequest {
         this.address = address;
     }
 
-    public String getDepartment() {
+    public Department getDepartment() {
         return department;
     }
 
-    public void setDepartment(String department) {
+    public void setDepartment(Department departmentS) {
         this.department = department;
     }
 
