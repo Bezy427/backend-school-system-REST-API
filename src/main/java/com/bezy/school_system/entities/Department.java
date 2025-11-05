@@ -6,7 +6,9 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -22,68 +24,41 @@ public class Department {
     @Column(name = "name")
     private String name;
 
-
     @Column(name = "members")
-    private String members;
+    private int members;
 
-    @ManyToOne
-    @JoinColumn(name = "teacher_id", nullable = false)
-    private Teacher teacher;
+    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Teacher> teachers =  new ArrayList<>();
 
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
     private Set<Subject> subjects = new LinkedHashSet<>();
 
     public Department(Long id,
                       String name,
-                      String members,
-                      Teacher teacher,
+                      int members,
+                      List<Teacher> teachers,
                       Set<Subject> subjects) {
         this.id = id;
         this.name = name;
         this.members = members;
-        this.teacher = teacher;
+        this.teachers = teachers;
         this.subjects = subjects;
     }
 
-    public Department() {}
-
-    public Long getId() {
-        return id;
+    public Department() {
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void addTeacher(Teacher teacher) {
+        teachers.add(teacher);
+        teacher.setDepartment(this);
+        this.members = teachers.size();
     }
 
-    public String getName() {
-        return name;
+    public void removeTeacher(Teacher teacher) {
+        teachers.remove(teacher);
+        teacher.setDepartment(null);
+        this.members = teachers.size();
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
 
-    public String getMembers() {
-        return members;
-    }
-
-    public void setMembers(String members) {
-        this.members = members;
-    }
-
-    public Teacher getTeacher() {
-        return teacher;
-    }
-
-    public void setTeacher(Teacher teacher) {
-        this.teacher = teacher;
-    }
-
-    public Set<Subject> getSubjects() {
-        return subjects;
-    }
-
-    public void setSubjects(Set<Subject> subjects) {
-        this.subjects = subjects;
-    }
 }
