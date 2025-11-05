@@ -2,6 +2,7 @@ package com.bezy.school_system.dtos;
 
 import com.bezy.school_system.entities.Role;
 import com.bezy.school_system.entities.User;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -41,7 +42,6 @@ public class RegisterStudentRequest {
 
     @Email(message = "Email must be valid!")
     @NotBlank(message = "Email is required!")
-    //(message = "Email must be lowercase!")
     private String email;
 
     @NotBlank(message = "Registration number is required!")
@@ -50,7 +50,18 @@ public class RegisterStudentRequest {
     @NotBlank(message = "Password is required!")
     private String password;
 
-    public RegisterStudentRequest(User user_id, String parentContact, String gender, LocalDate dateOfBirth, String grade, String username, String firstName, String lastName, String email, String registrationNumber, String password, Role role) {
+    @NotBlank(message = "Confirm password is required!")
+    private String confirmPassword;
+
+    @AssertTrue(message = "Passwords do not match")
+    public boolean isPasswordsMatching() {
+        return password != null && password.equals(confirmPassword);
+    }
+
+    public RegisterStudentRequest(User user_id, String parentContact, String gender, LocalDate dateOfBirth,
+                                  String grade, String username, String firstName, String lastName,
+                                  String email, String registrationNumber, String password, Role role,
+                                  String confirmPassword) {
         this.user_id = user_id;
         this.parentContact = parentContact;
         this.gender = gender;
@@ -62,6 +73,7 @@ public class RegisterStudentRequest {
         this.email = email;
         this.registrationNumber = registrationNumber;
         this.password = password;
+        this.confirmPassword = confirmPassword;
     }
 
     public RegisterStudentRequest() {
@@ -153,6 +165,14 @@ public class RegisterStudentRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getConfirmPassword() {
+        return confirmPassword;
+    }
+
+    public void setConfirmPassword(String confirmPassword) {
+        this.confirmPassword = confirmPassword;
     }
 
 }
