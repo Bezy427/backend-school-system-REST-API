@@ -1,5 +1,6 @@
 package com.bezy.school_system.dtos;
 
+import com.bezy.school_system.entities.Department;
 import com.bezy.school_system.entities.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -7,6 +8,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class TeacherDto {
@@ -32,11 +34,11 @@ public class TeacherDto {
     private String confirmPassword;
     private String subject;
     private String qualification;
-    private String department;
     private LocalDate hireDate;
     private String phoneNumber;
     private String role;
     private String address;
+    private Department department;
 
     public TeacherDto(Long id,
                       User user_id,
@@ -48,10 +50,10 @@ public class TeacherDto {
                       String confirmPassword,
                       String subject,
                       String qualification,
-                      String department,
                       LocalDate hireDate,
                       String role,
-                      String address) {
+                      String address,
+                      Department department) {
         this.id = id;
         this.user_id = user_id;
         this.username = username;
@@ -62,10 +64,10 @@ public class TeacherDto {
         this.confirmPassword = confirmPassword;
         this.subject = subject;
         this.qualification = qualification;
-        this.department = department;
         this.hireDate = hireDate;
         this.role = role;
         this.address = address;
+        this.department = department;
     }
 
     public Long getId() {
@@ -146,14 +148,6 @@ public class TeacherDto {
         this.qualification = qualification;
     }
 
-    public String getDepartment() {
-        return department;
-    }
-
-    public void setDepartment(String department) {
-        this.department = department;
-    }
-
     public LocalDate getHireDate() {
         return hireDate;
     }
@@ -176,5 +170,13 @@ public class TeacherDto {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
     }
 }

@@ -19,27 +19,4 @@ public class JwtConfig {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String getSecret() {
-        return secret;
-    }
-
-    public void setSecret(String secret) {
-        this.secret = secret;
-    }
-
-    public int getAccessTokenExpiration() {
-        return accessTokenExpiration;
-    }
-
-    public void setAccessTokenExpiration(int accessTokenExpiration) {
-        this.accessTokenExpiration = accessTokenExpiration;
-    }
-
-    public int getRefreshTokenExpiration() {
-        return refreshTokenExpiration;
-    }
-
-    public void setRefreshTokenExpiration(int refreshTokenExpiration) {
-        this.refreshTokenExpiration = refreshTokenExpiration;
-    }
 }

@@ -39,17 +39,12 @@ public class Exam {
     @Enumerated(EnumType.STRING)
     private PostPone postpone;
 
-    @Column(name = "decision")
-    @Enumerated(EnumType.STRING)
-    private Decision decision;
-
     @OneToMany(mappedBy = "exam")
     private Set<Result> results = new LinkedHashSet<>();
 
     public Exam(Long id,
                 Subject subject,
                 LocalDate examDate,
-                Decision decision,
                 PostPone postpone,
                 String subjectName,
                 LocalTime startTime,
@@ -58,7 +53,6 @@ public class Exam {
         this.id = id;
         this.subject = subject;
         this.examDate = examDate;
-        this.decision = decision;
         this.postpone = postpone;
         this.subjectName = subjectName;
         this.startTime = startTime;
@@ -91,14 +85,6 @@ public class Exam {
 
     public void setExamDate(LocalDate examDate) {
         this.examDate = examDate;
-    }
-
-    public Decision getDecision() {
-        return decision;
-    }
-
-    public void setDecision(Decision decision) {
-        this.decision = decision;
     }
 
     public PostPone getPostpone() {

@@ -28,6 +28,9 @@ public class Student {
     @Column(name = "email")
     private String email;
 
+    @Column(name = "password")
+    private String password;
+
     @Column(name = "registration_number")
     private String registrationNumber;
 
@@ -43,6 +46,7 @@ public class Student {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
 
     @Column(name = "parent_contact")
     private String parentContact;
@@ -122,6 +126,14 @@ public class Student {
         this.email = email;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     public String getLastName() {
         return lastName;
     }
@@ -146,12 +158,24 @@ public class Student {
         this.id = id;
     }
 
-    public Student(Long id, String username, String firstName, String lastName, String email, String registrationNumber, String grade, LocalDate dateOfBirth, String gender, User user, String parentContact, Role role) {
+    public Student(Long id,
+                   String username,
+                   String firstName,
+                   String lastName,
+                   String email,
+                   String password,
+                   String registrationNumber,
+                   String grade,
+                   LocalDate dateOfBirth,
+                   String gender, User user,
+                   String parentContact,
+                   Role role) {
         this.id = id;
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
+        this.password = password;
         this.registrationNumber = registrationNumber;
         this.grade = grade;
         this.dateOfBirth = dateOfBirth;

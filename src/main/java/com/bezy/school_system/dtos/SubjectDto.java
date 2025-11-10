@@ -2,6 +2,7 @@ package com.bezy.school_system.dtos;
 
 import com.bezy.school_system.entities.Department;
 import com.bezy.school_system.entities.Subject;
+import jakarta.persistence.ManyToOne;
 
 public class SubjectDto {
     private Long id;

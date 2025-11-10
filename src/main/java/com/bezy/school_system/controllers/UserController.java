@@ -4,18 +4,14 @@ import com.bezy.school_system.dtos.*;
 import com.bezy.school_system.entities.*;
 import com.bezy.school_system.mappers.*;
 import com.bezy.school_system.repositories.*;
-import com.bezy.school_system.services.StudentService;
-import com.bezy.school_system.services.TeacherService;
+import com.bezy.school_system.services.*;
+import com.fasterxml.jackson.dataformat.yaml.util.StringQuotingChecker;
 import jakarta.validation.Valid;
-import org.antlr.v4.runtime.misc.LogManager;
-import org.hibernate.sql.Update;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.List;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api")
@@ -44,6 +40,16 @@ public class UserController {
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
     private final PasswordEncoder passwordEncoder;
+    private final SchoolFeesServices schoolFeesServices;
+    private final EventService eventService;
+    private final PaymentHistoryService paymentHistoryService;
+    private final DepartmentService departmentService;
+    private final LectureService lectureService;
+    private final SubjectService subjectService;
+    private final UserService userService;
+    private final PrincipalService principalService;
+    private final PrincipalRepository principalRepository;
+    private final PrincipalMapper principalMapper;
 
     public UserController(UserRepository userRepository,
                           UserMapper userMapper,
@@ -67,13 +73,23 @@ public class UserController {
                           PaymentHistoryMapper paymentHistoryMapper,
                           EventRepository eventRepository,
                           EventMapper eventMapper,
-                          PasswordEncoder passwordEncoder) {
+                          PrincipalMapper principalMapper,
+                          PasswordEncoder passwordEncoder,
+                          SubjectService subjectService,
+                          SchoolFeesServices schoolFeesServices,
+                          EventService eventService,
+                          PaymentHistoryService paymentHistoryService,
+                          DepartmentService departmentService,
+                          LectureService lectureService,
+                          SubjectService subjectService1, UserService userService,
+                          PrincipalService principalService, PrincipalRepository principalRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.studentMapper = studentMapper;
         this.studentRepository = studentRepository;
         this.studentService = studentService;
         this.teacherService = teacherService;
+        this.principalMapper = principalMapper;
         this.attendanceRepository = attendanceRepository;
         this.teacherRepository = teacherRepository;
         this.teacherMapper = teacherMapper;
@@ -91,15 +107,52 @@ public class UserController {
         this.eventRepository = eventRepository;
         this.eventMapper = eventMapper;
         this.passwordEncoder = passwordEncoder;
+        this.schoolFeesServices = schoolFeesServices;
+        this.eventService = eventService;
+        this.paymentHistoryService = paymentHistoryService;
+        this.departmentService = departmentService;
+        this.lectureService = lectureService;
+        this.subjectService = subjectService1;
+        this.userService = userService;
+        this.principalService = principalService;
+        this.principalRepository = principalRepository;
+    }
+
+    @PostMapping("/principal")
+    public ResponseEntity<?> createPrincipal(
+           @Valid @RequestBody RegisterPrincipalRequest request,
+           UriComponentsBuilder uriBuilder
+    ){
+        principalService.createPrincipal(request);
+        return ResponseEntity.ok("Principal was created successfully!");
+    }
+
+    @PutMapping("/principal/{id}")
+    public ResponseEntity<PrincipalDto> updatePrincipal(
+            @RequestBody UpdatePrincipalRequest request,
+            @PathVariable Long id
+    ){
+        var principal = principalRepository.findById(id).orElse(null);
+        if(principal == null){
+            return ResponseEntity.notFound().build();
+        }
+        principalMapper.update(request, principal);
+        principalRepository.save(principal);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/principal")
+    public Iterable<?> getPrincipalById(
+    ){
+        return principalRepository.findAll()
+                .stream()
+                .map(principal -> principalMapper.toDto(principal))
+                .toList();
     }
 
     @GetMapping("/students")
     public Iterable<StudentDto> getAllStudents(
-            @RequestParam(required = false, defaultValue = "") String sortBy
     ) {
-        if(!Set.of("name", "email").contains(sortBy))
-            sortBy = "name";
-
         return studentRepository.findAll()
                 .stream()
                 .map(studentMapper::toDto)
@@ -107,7 +160,7 @@ public class UserController {
     }
 
     @GetMapping("/students/{id}")
-    public ResponseEntity<?> getStudent(
+    public ResponseEntity<StudentDto> getStudentById(
             @PathVariable Long id
     ){
         var student = studentRepository.findById(id).orElse(null);
@@ -115,7 +168,8 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok(studentMapper.toDto(student));
+        return ResponseEntity.ok().body(studentMapper.toDto(student));
+
     }
 
     @PutMapping("/teachers/{id}")
@@ -123,15 +177,9 @@ public class UserController {
             @PathVariable(name = "id") Long id,
             @RequestBody UpdateTeacherRequest request
     ){
-        var teacher = teacherRepository.findById(id).orElse(null);
-        if(teacher == null){
-            return ResponseEntity.notFound().build();
-        }
+        teacherService.updateTeacherAccount(request, id);
 
-        teacherMapper.update(request, teacher);
-        teacherRepository.save(teacher);
-
-        return ResponseEntity.ok(teacherMapper.toDto(teacher));
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/students/{id}")
@@ -139,15 +187,9 @@ public class UserController {
             @PathVariable(name = "id") Long id,
             @RequestBody UpdateStudentRequest request
     ){
-        var student = studentRepository.findById(id).orElse(null);
-        if(student == null){
-            return ResponseEntity.notFound().build();
-        }
+        studentService.updateStudentAccount(request, id);
 
-        studentMapper.update(request, student);
-        studentRepository.save(student);
-
-        return ResponseEntity.ok(studentMapper.toDto(student));
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/students/{id}")
@@ -179,22 +221,18 @@ public class UserController {
     @PostMapping("/teachers")
     public ResponseEntity<?> createTeacher(
             @Valid @RequestBody RegisterTeacherRequest request,
-            UriComponentsBuilder uriBuilder
+            @RequestParam Long departmentId
     ){
-        if(userRepository.findByUsername(request.getUsername()).isPresent()){
-            return ResponseEntity.badRequest().body("Username already exists!");
-        }
+        if(userRepository.findByUsername(request.getUsername()).isPresent())
+            return ResponseEntity.badRequest().body("Name already exists!");
 
-        if(userRepository.existsByEmail(request.getEmail())){
-            return ResponseEntity.badRequest().body("Email already exists!");
-        }
-
-        teacherService.createTeacherAccount(request);
+        teacherService.createTeacherAccount(request, departmentId);
         return ResponseEntity.ok("Teacher account was created successfully!");
     }
 
     @GetMapping("/teachers")
-    public Iterable<TeacherDto> getAllTeachers()
+    public Iterable<TeacherDto> getAllTeachers(
+    )
     {
         return teacherRepository.findAll()
                 .stream()
@@ -203,7 +241,7 @@ public class UserController {
     }
 
     @GetMapping("/teachers/{id}")
-    public ResponseEntity<?> getTeacher(
+    public ResponseEntity<TeacherDto> getTeacher(
             @PathVariable Long id
     ){
         var teacher = teacherRepository.findById(id).orElse(null);
@@ -215,16 +253,11 @@ public class UserController {
     }
 
     @DeleteMapping("/teachers/{id}")
-    public ResponseEntity<TeacherDto> deleteTeacher(
+    public ResponseEntity<?> deleteTeacher(
             @PathVariable Long id
     ){
-        var teacher = teacherRepository.findById(id).orElse(null);
-        if(teacher == null){
-            return ResponseEntity.notFound().build();
-        }
-
-        teacherRepository.delete(teacher);
-        return ResponseEntity.noContent().build();
+        teacherRepository.deleteById(id);
+        return ResponseEntity.ok("Teacher was successfully deleted!");
     }
 
 
@@ -241,7 +274,7 @@ public class UserController {
 
     @GetMapping("/users/{id}")
     public ResponseEntity<?> getUserById(
-            @PathVariable Long id){
+            @PathVariable(name="id") Long id){
         var user =  userRepository.findById(id).orElse(null);
         if(user == null){
             return ResponseEntity.notFound().build();
@@ -249,47 +282,62 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toDto(user));
     }
 
-    @GetMapping("/students/attendances")
-    public Iterable<?> getAttendanceByStudents(
-            AttendanceDto attendanceDto
+    @GetMapping("/attendance/{id}")
+    public ResponseEntity<AttendanceDto> getAttendanceById(
+            @PathVariable Long id
     ){
+        var attendance = attendanceRepository.findById(id).orElse(null);
+        if(attendance == null){
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(attendanceMapper.toDto(attendance));
+    }
+
+    @GetMapping("/attendances")
+    public Iterable<?> getAllAttendance(){
         return attendanceRepository.findAll()
                 .stream()
                 .map(attendanceMapper::toDto)
                 .toList();
     }
 
+    @PostMapping("/attendances")
+    public ResponseEntity<AttendanceDto> createAttendance(
+            @RequestBody RegisterAttendanceRequest request
+    ){
+        Attendance attendance = new Attendance();
+        attendance.setDate(request.getDate());
+        attendance.setId(request.getId());
+        attendance.setStudent(request.getStudentId());
+        attendance.setSubject(request.getSubjectId());
+        attendanceRepository.save(attendance);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/departments")
-    public ResponseEntity<DepartmentDto> createDepartment(
+    public ResponseEntity<?> createDepartment(
             @RequestBody RegisterDepartmentRequest request
     ){
         Department department = new Department();
         department.setName(request.getName());
         department.setId(request.getId());
         department.setMembers(request.getMembers());
-        department.setTeacher(request.getTeacher());
         departmentRepository.save(department);
-        return ResponseEntity.ok(departmentMapper.toDto(department));
+        return ResponseEntity.ok("department was successfully created!");
     }
 
     @PutMapping("/departments/{id}")
-    public ResponseEntity<DepartmentDto> updateDepartmentById(
+    public ResponseEntity<?> updateDepartmentById(
             @RequestBody UpdateDepartmentRequest request,
             @PathVariable Long id
     ){
-        var department = departmentRepository.findById(id).orElse(null);
-        if(department == null){
-            return ResponseEntity.notFound().build();
-        }
-
-        departmentMapper.update(request, department);
-        departmentRepository.save(department);
-        return ResponseEntity.ok(departmentMapper.toDto(department));
+        departmentService.updateDepartmentById(id, request);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/departments")
-    public List<DepartmentDto> getAllDepartments(
-            
+    public Iterable<?> getAllDepartments(
     ){
         return departmentRepository.findAll()
                 .stream()
@@ -301,35 +349,19 @@ public class UserController {
     public ResponseEntity<?> getDepartmentById(
             @PathVariable Long id
     ){
-        var dep =  departmentRepository.findById(id).orElse(null);
-        if(dep == null){
+        var dept = departmentRepository.findById(id).orElse(null);
+        if(dept == null){
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok(departmentMapper.toDto(dep));
-    }
-
-    @GetMapping("/departments/name")
-    public ResponseEntity<?> getDepartmentByName(
-            String name
-    ){
-        var dep = departmentRepository.findDepartmentByName(name);
-        if(dep == null){
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(departmentMapper.toDto(dep));
+        return ResponseEntity.ok(departmentMapper.toDto(dept));
     }
 
     @DeleteMapping("/departments/{id}")
     public ResponseEntity<?> deleteDepartmentById(
             @PathVariable Long id
     ){
-        var department = departmentRepository.findById(id).orElse(null);
-        if(department == null){
-            return ResponseEntity.notFound().build();
-        }
-
-        departmentRepository.delete(department);
+        departmentService.deleteDepartmentById(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -337,16 +369,8 @@ public class UserController {
     public ResponseEntity<?> registerLecture(
             @RequestBody RegisterLectureRequest request
     ){
-        Lecture lecture = new Lecture();
-        lecture.setId(request.getId());
-        lecture.setStartTime(request.getStartTime());
-        lecture.setEndTime(request.getEndTime());
-        lecture.setLocation(request.getLocation());
-        lecture.setTeacher(request.getTeacher());
-        lecture.setTeacherName(request.getTeacherName());
-        lecture.setSubjectName(request.getSubjectName());
-        lectureRepository.save(lecture);
-        return ResponseEntity.ok(lecture);
+        lectureService.createLecture(request);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/lectures")
@@ -363,15 +387,8 @@ public class UserController {
             @PathVariable(name = "id") Long id,
             @RequestBody UpdateLectureRequest request
     ){
-        var lecture = lectureRepository.findById(id).orElse(null);
-        if(lecture == null){
-            return ResponseEntity.notFound().build();
-        }
-
-        lectureMapper.update(request, lecture);
-        lectureRepository.save(lecture);
-
-        return ResponseEntity.ok(lectureMapper.toDto(lecture));
+        lectureService.updateLectureById(id, request);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/lectures/{id}")
@@ -379,10 +396,9 @@ public class UserController {
             @PathVariable Long id
     ){
         var lecture = lectureRepository.findById(id).orElse(null);
-        if(lecture == null){
+        if(lecture ==  null){
             return ResponseEntity.notFound().build();
         }
-
         return ResponseEntity.ok(lectureMapper.toDto(lecture));
     }
 
@@ -390,12 +406,7 @@ public class UserController {
     public ResponseEntity<LectureDto> deleteLectureById(
             @PathVariable Long id
     ){
-        var lecture = lectureRepository.findById(id).orElse(null);
-        if(lecture == null){
-            return ResponseEntity.notFound().build();
-        }
-
-        lectureRepository.delete(lecture);
+        lectureService.deleteLectureById(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -403,16 +414,13 @@ public class UserController {
     public ResponseEntity<?> createSubject(
             @RequestBody RegisterSubjectRequest request
     ){
-        Subject subject = new Subject();
-        subject.setId(request.getId());
-        subject.setSubjectName(request.getSubjectName());
-        subject.setDepartment(request.getDepartmentId());
-        subjectRepository.save(subject);
-        return ResponseEntity.ok(subject);
+        subjectService.createSubject(request);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/subjects")
-    public Iterable<SubjectDto> getAllSubjects()
+    public Iterable<?> getAllSubjects(
+    )
     {
         return subjectRepository.findAll()
                 .stream()
@@ -424,7 +432,7 @@ public class UserController {
     public ResponseEntity<?> getSubjectById(
             @PathVariable Long id
     ){
-        var subject = subjectRepository.findById(id).orElse(null);
+        var subject =  subjectRepository.findById(id).orElse(null);
         if(subject == null){
             return ResponseEntity.notFound().build();
         }
@@ -436,27 +444,15 @@ public class UserController {
             @PathVariable(name = "id") Long id,
             @RequestBody UpdateSubjectRequest request
     ){
-        var subject = subjectRepository.findById(id).orElse(null);
-        if(subject == null){
-            return ResponseEntity.notFound().build();
-        }
-
-        subjectMapper.update(request, subject);
-        subjectRepository.save(subject);
-
-        return ResponseEntity.ok(subjectMapper.toDto(subject));
+        subjectService.updateSubject(id, request);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/subjects/{id}")
     public ResponseEntity<?> deleteSubjectById(
             @PathVariable Long id
     ){
-        var subject = subjectRepository.findById(id).orElse(null);
-        if(subject == null){
-            return ResponseEntity.notFound().build();
-        }
-
-        subjectRepository.delete(subject);
+        subjectService.deleteSubjectById(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -464,15 +460,8 @@ public class UserController {
     public ResponseEntity<?> createSchoolFeeStatement(
             RegisterSchoolFeeRequest request
     ){
-        SchoolFee schoolFee = new SchoolFee();
-        schoolFee.setId(request.getId());
-        schoolFee.setBalance(request.getBalance());
-        schoolFee.setPaymentDate(request.getPaymentDate());
-        schoolFee.setAmountPaid(request.getAmountPaid());
-        schoolFee.setAmountDue(request.getAmountDue());
-        schoolFee.setStudent(request.getStudent());
-        schoolFeeRepository.save(schoolFee);
-        return ResponseEntity.ok(schoolFee);
+        schoolFeesServices.createSchoolFee(request);
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/school-fees/{id}")
@@ -480,72 +469,40 @@ public class UserController {
             @PathVariable(name = "id") Long id,
             @RequestBody UpdateSchoolFeeRequest request
     ){
-        var schoolFee = schoolFeeRepository.findById(request.getId()).orElse(null);
-        if(schoolFee == null){
-            return ResponseEntity.notFound().build();
-        }
-
-        schoolFeeMapper.update(request, schoolFee);
-        schoolFeeRepository.save(schoolFee);
-
-        return ResponseEntity.ok(schoolFeeMapper.toDto(schoolFee));
+        schoolFeesServices.updateSchoolFee(id, request);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/school-fees")
-    public Iterable<SchoolFeeDto> getAllSchoolFeesStatement(
-            @RequestBody RegisterSchoolFeeRequest request
+    public ResponseEntity<?> getAllSchoolFeesStatement(
     ){
-        return schoolFeeRepository.findAll()
-                .stream()
-                .map(schoolFeeMapper::toDto)
-                .toList();
+        schoolFeesServices.getAllSchoolFeesStatement();
+        return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/school-fees/{id}")
-    public ResponseEntity<SchoolFeeDto> getSchoolFeeByStudentId(
-            @PathVariable Long id
-    ){
-        var school = schoolFeeRepository.findById(id).orElse(null);
-        if(school == null){
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(schoolFeeMapper.toDto(school));
-    }
 
     @DeleteMapping("/school-fees/{id}")
     public ResponseEntity<Void> deleteSchoolFeeStatementById(
             @PathVariable Long id
     ){
-        var schoolFee =  schoolFeeRepository.findById(id).orElse(null);
-        if(schoolFee == null){
-            return ResponseEntity.notFound().build();
-        }
-
-        schoolFeeRepository.delete(schoolFee);
+        schoolFeesServices.deleteSchoolFee(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/payment-history")
-    public Iterable<?> getPaymentHistory(
-            @RequestBody RegisterPaymentHistoryRequest request
+    public ResponseEntity<?> getPaymentHistory(
+            @PathVariable Long id
     ){
-        return paymentHistoryRepository.findAll()
-                .stream()
-                .map(paymentHistory -> paymentHistoryMapper.toDto(paymentHistory))
-                .toList();
+        paymentHistoryService.getPaymentHistory(id);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/payment-history/{id}")
     public ResponseEntity<?> getPaymentHistoryById(
             @PathVariable Long id
     ){
-        var paymentHistory = paymentHistoryRepository.findById(id).orElse(null);
-        if(paymentHistory == null){
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(paymentHistoryMapper.toDto(paymentHistory));
+        paymentHistoryService.getPaymentHistoryById(id);
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/payment-history/{id}")
@@ -554,55 +511,39 @@ public class UserController {
             @PathVariable Long id,
             PaymentHistory paymentHistory
     ){
-        var payment = paymentHistoryRepository.findById(id).orElse(null);
-        if(payment == null){
-            return ResponseEntity.notFound().build();
-        }
 
-        paymentHistoryMapper.update(request, paymentHistory);
-        paymentHistoryRepository.save(payment);
+        paymentHistoryService.updatePaymentHistoryById(id, paymentHistory, request);
 
-        return ResponseEntity.ok(paymentHistoryMapper.toDto(payment));
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/events")
     public ResponseEntity<?> createEvent(
             @RequestBody RegisterEventRequest request
     ){
-        Event event = new Event();
-        event.setComments(request.getComments());
-        event.setTitle(request.getTitle());
-        event.setDate(request.getDate());
-        event.setEndTime(request.getEndTime());
-        event.setStartTime(request.getStartTime());
-        event.setId(request.getId());
-        eventRepository.save(event);
-        return ResponseEntity.ok(event);
+        eventService.createEvent(request);
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/events/{id}")
     public ResponseEntity<?> updateEvent(
             @RequestBody UpdateEventRequest request,
-            @PathVariable Long id
+            @PathVariable(name = "id") Long id
     ){
         var event = eventRepository.findById(id).orElse(null);
         if(event == null){
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.noContent().build();
         }
-
         eventMapper.update(request, event);
-
         eventRepository.save(event);
-        return ResponseEntity.ok(event);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/events")
-    public Iterable<EventDto> getAllEvents(
+    public Iterable<?> getAllEvents(
     ){
-        return eventRepository.findAll()
-                .stream()
-                .map(event -> eventMapper.toDto(event))
-                .toList();
+        eventService.getAllEvents();
+        return eventRepository.findAll();
     }
 
     @GetMapping("/events/{id}")
@@ -613,22 +554,15 @@ public class UserController {
         if(event == null){
             return ResponseEntity.notFound().build();
         }
-
         return ResponseEntity.ok(eventMapper.toDto(event));
-
     }
 
     @DeleteMapping("/events/{id}")
     public ResponseEntity<?> deleteEventById(
             @PathVariable Long id
     ){
-        var event = eventRepository.findById(id).orElse(null);
-        if(event == null){
-            return ResponseEntity.notFound().build();
-        }
-
-        eventRepository.delete(event);
-        return ResponseEntity.ok(event);
+        eventService.deleteEventById(id);
+        return ResponseEntity.ok().build();
     }
 
 }

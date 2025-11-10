@@ -31,7 +31,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @OneToOne(mappedBy = "user")
+    @OneToOne(mappedBy = "user", cascade =  CascadeType.PERSIST)
     private Principal principal;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)

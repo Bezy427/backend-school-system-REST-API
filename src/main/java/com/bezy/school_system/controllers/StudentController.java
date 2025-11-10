@@ -5,6 +5,8 @@ import com.bezy.school_system.entities.Role;
 import com.bezy.school_system.entities.SchoolFee;
 import com.bezy.school_system.mappers.*;
 import com.bezy.school_system.repositories.*;
+import com.bezy.school_system.services.LectureService;
+import com.bezy.school_system.services.PrincipalService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -22,6 +24,8 @@ public class StudentController {
     private final EventRepository eventRepository;
     private final ExamRepository examRepository;
     private final LectureRepository lectureRepository;
+    private final LectureService lectureService;
+    private final PrincipalService principalService;
     private SchoolFeeMapper schoolFeeMapper;
     private EventMapper eventMapper;
     private ExamMapper examMapper;
@@ -36,7 +40,7 @@ public class StudentController {
                              ExamRepository examRepository,
                              ExamMapper examMapper,
                              LectureRepository lectureRepository,
-                             LectureMapper lectureMapper) {
+                             LectureMapper lectureMapper, LectureService lectureService, PrincipalService principalService) {
         this.studentRepository = studentRepository;
         this.studentMapper = studentMapper;
         this.userRepository = userRepository;
@@ -48,6 +52,8 @@ public class StudentController {
         this.examMapper = examMapper;
         this.lectureRepository = lectureRepository;
         this.lectureMapper = lectureMapper;
+        this.lectureService = lectureService;
+        this.principalService = principalService;
     }
 
     @GetMapping
@@ -144,12 +150,15 @@ public class StudentController {
     }
 
     @GetMapping("/lectures")
-    public Iterable<LectureDto> getAllLectures(
-
+    public ResponseEntity<LectureDto> getAllLectures(
+            @PathVariable Long id
     ){
-        return lectureRepository.findAll()
-                .stream()
-                .map(lecture -> lectureMapper.toDto(lecture))
-                .toList();
+        lectureService.getAllLecture(id);
+        return ResponseEntity.ok().build();
+    }
+
+    public ResponseEntity<PrincipalDto> getPrincipal(){
+        principalService.getPrincipal();
+        return ResponseEntity.ok().build();
     }
 }

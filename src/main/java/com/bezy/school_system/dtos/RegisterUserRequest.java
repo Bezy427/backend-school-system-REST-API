@@ -2,41 +2,47 @@ package com.bezy.school_system.dtos;
 
 import com.bezy.school_system.entities.Role;
 import com.bezy.school_system.entities.Student;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class RegisterUserRequest {
+    @NotBlank(message = "username is required!")
     private String username;
 
+    @NotBlank(message = "first name is required!")
     private String firstName;
 
+    @NotBlank(message = "last name is required!")
     private String lastName;
 
     @Email
+    @NotBlank(message = "Email is required!")
     private String email;
 
-    private String registrationNumber;
-
+    @NotBlank(message = "Password is required!")
     private String password;
 
     private Role role;
 
+    @NotBlank(message = "Confirm password is required!")
     private String confirmPassword;
 
-    private Long studentId;
-
+    @AssertTrue(message = "Passwords do not match")
+    public boolean isPasswordsMatching() {
+        return password != null && password.equals(confirmPassword);
+    }
 
     public RegisterUserRequest(String username, String firstName, String lastName, String email, String registrationNumber, String password, Role role, String confirmPassword, Long studentId) {
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.registrationNumber = registrationNumber;
         this.password = password;
         this.role = role;
         this.confirmPassword = confirmPassword;
-        this.studentId = studentId;
     }
 
     public RegisterUserRequest() {
@@ -46,7 +52,7 @@ public class RegisterUserRequest {
         return username;
     }
 
-    public void setUsername(String username) {
+    public void setUsername() {
         this.username = username;
     }
 
@@ -54,7 +60,7 @@ public class RegisterUserRequest {
         return firstName;
     }
 
-    public void setFirstName(String firstName) {
+    public void setFirstName() {
         this.firstName = firstName;
     }
 
@@ -62,7 +68,7 @@ public class RegisterUserRequest {
         return lastName;
     }
 
-    public void setLastName(String lastName) {
+    public void setLastName() {
         this.lastName = lastName;
     }
 
@@ -70,13 +76,7 @@ public class RegisterUserRequest {
         return email;
     }
 
-    public String getRegistrationNumber() {
-        return registrationNumber;
-    }
 
-    public void setRegistrationNumber(String registrationNumber) {
-        this.registrationNumber = registrationNumber;
-    }
 
     public void setEmail(String email) {
         this.email = email;
@@ -106,11 +106,5 @@ public class RegisterUserRequest {
         this.confirmPassword = confirmPassword;
     }
 
-    public Long getStudentId() {
-        return studentId;
-    }
 
-    public void setStudentId(Long studentId) {
-        this.studentId = studentId;
-    }
 }
