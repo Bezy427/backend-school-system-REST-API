@@ -146,7 +146,7 @@ public class UserController {
     ){
         return principalRepository.findAll()
                 .stream()
-                .map(principal -> principalMapper.toDto(principal))
+                .map(principalMapper::toDto)
                 .toList();
     }
 

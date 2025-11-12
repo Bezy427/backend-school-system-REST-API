@@ -5,7 +5,6 @@ import com.bezy.school_system.entities.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import lombok.Data;
-import org.aspectj.weaver.patterns.IToken;
 
 import javax.crypto.SecretKey;
 import java.util.Date;

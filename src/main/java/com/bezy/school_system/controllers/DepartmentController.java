@@ -33,12 +33,8 @@ public class DepartmentController {
     public ResponseEntity<?> getDepartment(
             @PathVariable Long id
     ) {
-        var department = departmentRepository.findById(id).orElse(null);
-        if (department == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(department);
+        departmentRepository.findById(id);
+        return ResponseEntity.ok().build();
     }
 
 }

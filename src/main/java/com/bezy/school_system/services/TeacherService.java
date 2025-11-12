@@ -21,10 +21,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 @Service
 public class TeacherService {
     private final DepartmentRepository departmentRepository;
-    private UserRepository userRepository;
-    private TeacherMapper teacherMapper;
-    private TeacherRepository teacherRepository;
-    private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final TeacherMapper teacherMapper;
+    private final TeacherRepository teacherRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public TeacherService(UserRepository userRepository,
                           TeacherMapper teacherMapper,

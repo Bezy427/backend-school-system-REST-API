@@ -59,7 +59,6 @@ public class DepartmentService {
     }
 
     public Iterable<?> getAllDepartments(
-            @PathVariable Long id
     ){
         return departmentRepository.findAll()
                 .stream()

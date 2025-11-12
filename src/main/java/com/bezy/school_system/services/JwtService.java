@@ -1,7 +1,6 @@
 package com.bezy.school_system.services;
 
 import com.bezy.school_system.config.JwtConfig;
-import com.bezy.school_system.entities.Role;
 import com.bezy.school_system.entities.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
