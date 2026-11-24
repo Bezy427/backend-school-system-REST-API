@@ -1,0 +1,2 @@
+ALTER TABLE exams
+    ADD decision VARCHAR(255) NULL;

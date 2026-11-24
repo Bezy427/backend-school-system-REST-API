@@ -1,0 +1,2 @@
+ALTER TABLE principal
+    ADD role VARCHAR(255) NULL;
