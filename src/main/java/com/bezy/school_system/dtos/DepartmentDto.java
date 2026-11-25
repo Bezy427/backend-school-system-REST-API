@@ -12,5 +12,6 @@ public class DepartmentDto {
     private String name;
     private int members;
     private Teacher teacherId;
+    private List<Long> subjectId;
 
 }

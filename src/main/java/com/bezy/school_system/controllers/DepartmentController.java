@@ -1,43 +1,59 @@
+
 package com.bezy.school_system.controllers;
 
 import com.bezy.school_system.dtos.DepartmentDto;
-import com.bezy.school_system.mappers.DepartmentMapper;
-import com.bezy.school_system.repositories.DepartmentRepository;
+import com.bezy.school_system.dtos.RegisterDepartmentRequest;
+import com.bezy.school_system.dtos.UpdateDepartmentRequest;
+import com.bezy.school_system.entities.Department;
 import com.bezy.school_system.services.DepartmentService;
-import io.jsonwebtoken.impl.security.EdwardsCurve;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/departments")
 public class DepartmentController {
 
-    private final DepartmentRepository departmentRepository;
-    private final DepartmentMapper departmentMapper;
-    private DepartmentService departmentService;
+    private final DepartmentService departmentService;
 
-    public DepartmentController(DepartmentRepository departmentRepository, DepartmentMapper departmentMapper) {
-        this.departmentRepository = departmentRepository;
-        this.departmentMapper = departmentMapper;
+    public DepartmentController(DepartmentService departmentService) {
+        this.departmentService = departmentService;
+    }
+
+    @PostMapping
+    public ResponseEntity<Department> createDepartment(
+            @RequestBody RegisterDepartmentRequest request
+    ) {
+        Department department = departmentService.createDepartment(request);
+
+        return ResponseEntity.status(201).body(department);
     }
 
     @GetMapping
     public Iterable<DepartmentDto> getAllDepartments() {
-        return departmentRepository.findAll()
-                .stream()
-                .map(departmentMapper::toDto)
-                .toList();
+        return departmentService.getAllDepartments();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getDepartment(
             @PathVariable Long id
     ) {
-        departmentService.getDepartmentById(id);
-        return ResponseEntity.ok().build();
+        return departmentService.getDepartmentById(id);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateDepartment(
+            @PathVariable Long id,
+            @RequestBody UpdateDepartmentRequest request
+    ) {
+        return departmentService.updateDepartmentById(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteDepartment(
+            @PathVariable Long id
+    ) {
+        return departmentService.deleteDepartmentById(id);
+    }
 }
