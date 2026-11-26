@@ -15,6 +15,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,44 +26,52 @@ public class AuthController {
     private final JwtConfig jwtConfig;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public AuthController(AuthenticationManager authenticationManager,
                           JwtService jwtService,
                           JwtConfig jwtConfig,
                           UserRepository userRepository,
-                          UserMapper userMapper) {
+                          UserMapper userMapper, PasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.jwtConfig = jwtConfig;
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/login")
     public ResponseEntity<JwtResponse> login(
             @Valid @RequestBody LoginRequest request,
             HttpServletResponse response
-    ){
-         authenticationManager.authenticate(
-                 new UsernamePasswordAuthenticationToken(
-                         request.getEmail(),
-                         request.getPassword()
-                 )
-         );
+    ) {
+        var user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-         var user = userRepository.findByEmail(request.getEmail()).orElseThrow();
-         var accessToken = jwtService.generateAccessToken(user);
-         var refreshToken = jwtService.generateRefreshToken(user);
+        System.out.println("Login email found: " + user.getEmail());
 
-         var cookie = new Cookie("refreshToken", refreshToken.toString());
-         cookie.setHttpOnly(true);
-         cookie.setPath("/auth/refresh");
-         cookie.setMaxAge(jwtConfig.getRefreshTokenExpiration()); // 7 days
-         cookie.setSecure(true);
-         response.addCookie(cookie);
+        System.out.println("Submitted password matches database: " +
+                passwordEncoder.matches(request.getPassword(), user.getPassword()));
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
+
+        var accessToken = jwtService.generateAccessToken(user);
+        var refreshToken = jwtService.generateRefreshToken(user);
+
+        var cookie = new Cookie("refreshToken", refreshToken.toString());
+        cookie.setHttpOnly(true);
+        cookie.setPath("/auth/refresh");
+        cookie.setMaxAge(jwtConfig.getRefreshTokenExpiration());
+        cookie.setSecure(true);
+        response.addCookie(cookie);
 
         return ResponseEntity.ok(new JwtResponse(accessToken.toString()));
-
     }
 
     @PostMapping("/refresh")
