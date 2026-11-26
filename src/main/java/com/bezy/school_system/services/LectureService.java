@@ -1,16 +1,17 @@
 package com.bezy.school_system.services;
 
+import com.bezy.school_system.dtos.LectureDto;
 import com.bezy.school_system.dtos.RegisterLectureRequest;
 import com.bezy.school_system.dtos.UpdateLectureRequest;
 import com.bezy.school_system.entities.Lecture;
-import com.bezy.school_system.mappers.AssignmentMapper;
 import com.bezy.school_system.mappers.LectureMapper;
 import com.bezy.school_system.repositories.LectureRepository;
-import org.antlr.v4.runtime.misc.LogManager;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.List;
 
 @Service
 public class LectureService {
@@ -73,13 +74,13 @@ public class LectureService {
         return ResponseEntity.noContent().build();
     }
 
-    public Iterable<?> getAllLecture(
-            @PathVariable Long id
-    ){
+
+    public List<LectureDto> getAllLecture(Long id) {
         return lectureRepository.findAll()
                 .stream()
                 .map(lectureMapper::toDto)
                 .toList();
     }
+
 }
 

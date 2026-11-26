@@ -8,6 +8,7 @@ import com.bezy.school_system.repositories.*;
 import com.bezy.school_system.services.LectureService;
 import com.bezy.school_system.services.PrincipalService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -73,6 +74,19 @@ public class StudentController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(studentMapper.toDto(student));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<StudentDto> getCurrentStudent(Authentication authentication) {
+        Long userId = Long.valueOf(authentication.getPrincipal().toString());
+
+        var student = studentRepository.findByUser_Id(userId);
+
+        if (student.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(studentMapper.toDto(student.get()));
     }
 
     @GetMapping("/school-fees")
