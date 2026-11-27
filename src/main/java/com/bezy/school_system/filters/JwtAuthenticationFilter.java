@@ -31,12 +31,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        var token = authHeader.replace("Bearer ", "");
+        var token = authHeader.substring(7);
+
         var jwt = jwtService.parseToken(token);
-        if(jwt == null || jwt.isExpired()) {
+
+        if (jwt == null) {
+            System.out.println("JWT DEBUG: Token parsing failed.");
             filterChain.doFilter(request, response);
             return;
         }
+
+        if (jwt.isExpired()) {
+            System.out.println("JWT DEBUG: Token has expired.");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        System.out.println("JWT DEBUG: Token is valid.");
+        System.out.println("JWT DEBUG: User ID = " + jwt.getUserId());
+        System.out.println("JWT DEBUG: Role = " + jwt.getRole());
 
         var authentication = new UsernamePasswordAuthenticationToken(
                 jwt.getUserId(),
