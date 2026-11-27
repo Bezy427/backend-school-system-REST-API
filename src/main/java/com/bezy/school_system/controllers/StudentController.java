@@ -97,7 +97,7 @@ public class StudentController {
                 .toList();
     }
 
-    @GetMapping("/school-fees/balance")
+    @GetMapping("/school-fees/balance/{balance}")
     public ResponseEntity<?> getSchoolFeeByBalance(
             @PathVariable Double balance
     ){
@@ -109,7 +109,7 @@ public class StudentController {
         return ResponseEntity.ok(fees);
     }
 
-    @GetMapping("/school-fees/paymentDate")
+    @GetMapping("/school-fees/paymentDate/{paymentDate}")
     public ResponseEntity<?> getSchoolFeeByPaymentDate(
             @PathVariable LocalDateTime paymentDate
     ){
@@ -164,11 +164,9 @@ public class StudentController {
     }
 
     @GetMapping("/lectures")
-    public ResponseEntity<LectureDto> getAllLectures(
-            @PathVariable Long id
-    ){
-        lectureService.getAllLecture(id);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<List<LectureDto>> getAllLectures() {
+        List<LectureDto> lectures = lectureService.getAllLecture();
+        return ResponseEntity.ok(lectures);
     }
 
     public ResponseEntity<PrincipalDto> getPrincipal(){
